@@ -2,22 +2,30 @@ package client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Scanner;
-
+import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.Item;
+import entity.Owner;
+import entity.SearchResponse;
 
 public class RestClient {
 
-	public static void main(String[] args) {
+	public static final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	
+	public static void main(String[] args) throws IOException {
 
-		String input = "";
+		String choice = "";
+		do {
 		System.out.println("Please enter your search query: ");
-		Scanner s = new Scanner(System.in);
-		input = s.next();
+		BufferedReader obj = new BufferedReader(new InputStreamReader(System.in));
+		String input = obj.readLine();
+		input = input.replaceAll(" ", "%20");
 		try {
 			
 			HttpClient httpClient = HttpClientBuilder.create().build();
@@ -37,11 +45,19 @@ public class RestClient {
 			// Get-Capture Complete application/xml body response
 			BufferedReader br = new BufferedReader(new InputStreamReader((response.getEntity().getContent())));
 			String output;
-			System.out.println("============Output is:============");
  
 			// Simply iterate through XML response and show on console.
 			while ((output = br.readLine()) != null) {
-				System.out.println(output);
+				SearchResponse searchResponse = objectMapper.readValue(output, SearchResponse.class);
+				System.out.println(String.format("Here are the top 5 results for your search %s", input));
+				List<Item> items = searchResponse.getItems();
+				for(int count = 0; count < 5; count++) {
+					Item item = items.get(count);
+					Owner owner = item.getOwner();
+					System.out.println("Title: " + item.getTitle());
+					System.out.println("URL: " + item.getLink());
+					System.out.println("Author Display Name: " + owner.getDisplayName());
+				}
 			}
  
 		} catch (ClientProtocolException e) {
@@ -50,6 +66,9 @@ public class RestClient {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Do you want to continue? Please enter Yes or No");
+		choice = obj.readLine();
+		}while(choice.equalsIgnoreCase("Yes"));
 
 	}
 
