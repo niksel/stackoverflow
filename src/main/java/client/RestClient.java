@@ -37,7 +37,7 @@ public class RestClient {
 			// Get-Capture Complete application/xml body response
 			BufferedReader br = new BufferedReader(new InputStreamReader((response.getEntity().getContent())));
 			String output;
-			System.out.println("============Output:============");
+			System.out.println("============Output is:============");
  
 			// Simply iterate through XML response and show on console.
 			while ((output = br.readLine()) != null) {
